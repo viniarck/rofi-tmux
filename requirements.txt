@@ -1,0 +1,4 @@
+python-rofi
+libtmux
+click
+i3ipc
