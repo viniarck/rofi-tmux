@@ -1,55 +1,65 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import i3ipc
+from .i3wm import i3WM
 import libtmux
 import logging
 import json
-import io
 import os
 import rofi
-import shutil
 import subprocess
-import sys
-logging.basicConfig(filename='/tmp/.tmux_rofi.log', level=logging.DEBUG)
+logging.basicConfig(filename='/tmp/.rft.log', level=logging.ERROR)
 
 
-class RofiTmux(object):
-    """Abstraction to interface with rofi tmux, tmuxinator and i3"""
+class RFT(object):
+    """Abstraction to interface with rofi, tmux, tmuxinator."""
 
     def __init__(self, debug=False):
-        """Constructor"""
+        """Initialize ."""
         self._rofi = rofi.Rofi()
         self._libts = libtmux.Server()
         self._sessions = None
-        self._has_i3 = shutil.which('i3')
-        if self._has_i3:
-            self._i3 = i3ipc.Connection()
+        self._wm = None
         self._cur_tmux_s = None
         self._cur_i3_s = None
         self.logger = logging.getLogger(__name__)
         if debug:
             self.logger.setLevel(logging.DEBUG)
-        self._cache_f = os.path.join(os.environ.get('HOME'), '.rofi_tmux')
+        self._cache_f = os.path.join(os.environ.get('HOME'), '.rft.cache')
         self._cache = {}
+        self._config_f = os.path.join(os.environ.get('HOME'), '.rft')
+
         self._register_cur_sessions()
         self._load_cache()
+        self._load_config()
 
-    def _load_cache(self) -> None:
-        """Loads last tmux sessions and window cache
+    def _load_config(self) -> None:
+        """Load json config file ~/.rft.
+
+        Currently supported window managers: 'i3'
 
         """
+        config = {'wm': ''}
+        try:
+            with open(self._config_f, 'r') as f:
+                config = json.load(f)
+                if config.get('wm') == 'i3':
+                    self._wm = i3WM()
+        except FileNotFoundError as e:
+            pass
+        self.logger.debug('loaded config: {}'.format(config))
+
+    def _load_cache(self) -> None:
+        """Load last tmux sessions and window cache."""
         try:
             with open(self._cache_f, 'r') as f:
                 self._cache = json.load(f)
         except FileNotFoundError as e:
-            self._cache = {'_last_tmux_s': None, '_last_tmux_w': None}
+            self._cache = {'last_tmux_s': None, 'last_tmux_w': None}
         self.logger.debug('loaded cache: {}'.format(self._cache))
 
     def _write_cache(self) -> None:
-        """Writes cache
-
-        """
+        """Write cache."""
         try:
             with open(self._cache_f, 'w') as f:
                 f.write(
@@ -64,12 +74,7 @@ class RofiTmux(object):
             raise e
 
     def _register_cur_sessions(self) -> None:
-        """Registers the current tmux and i3 sessions
-
-        """
-        if self._has_i3:
-            self._cur_i3_s = self._find_cur_i3_workspace()
-            self.logger.debug('_cur_i3_s: {}'.format(self._cur_i3_s))
+        """Register the current tmux sessions."""
         try:
             self._sessions = self._libts.list_sessions()
             self.logger.debug('_sessions: {}'.format(self._sessions))
@@ -79,54 +84,28 @@ class RofiTmux(object):
         self._cur_tmux_s = self._get_cur_session()
         self.logger.debug('_cur_tmux_s: {}'.format(self._cur_tmux_s))
 
-    def _find_cur_i3_workspace(self) -> str:
-        """Finds current i3 workspace
-
-        """
-        workspaces = self._i3.get_workspaces()
-        for workspace in workspaces:
-            if workspace.get('visible'):
-                return workspace.get('name')
-
     def _get_cur_session(self) -> str:
-        """Gets current tmux session name
-
-        """
+        """Get current tmux session name."""
         out, err = subprocess.Popen(
-            """tmux list-panes -F '#{pane_tty} #{session_name}'""",
+            "tmux list-panes -F '#{session_name}'",
             shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE).communicate()
         for line in out.splitlines():
             return line.decode('utf-8').split()[-1]
 
-    def _switch_i3_tmux_workspace(self, session_name) -> bool:
-        """Switches to i3 workspace where tmux is running
-
-        :session_name: tmux sesion name to switch to
-
-        """
-        tree = self._i3.get_tree()
-        descendents = tree.descendents()
-        workspaces = [
-            descendent for descendent in descendents
-            if descendent.type == 'workspace'
-        ]
-        for w in workspaces:
-            cons = w.find_named(session_name)
-            if cons:
-                # only switches if current workspace is different
-                if not w.name == self._cur_i3_s:
-                    self.logger.debug('_cur_i3_s:{}'.format(self._cur_i3_s))
-                    self.logger.debug('switching i3 to workspace: {}'.format(
-                        w.name))
-                    w.command('workspace {}'.format(w.name))
-                    return True
+    def _get_cur_window(self) -> str:
+        """Get current tmux window."""
+        if self._cur_tmux_s:
+            for w in self._libts._list_windows():
+                if w.get('session_name') == self._cur_tmux_s:
+                    if w.get('window_active') == '1':
+                        return "{}:{}:{}".format(
+                            w.get('session_name'), w.get('window_index'),
+                            w.get('window_name'))
 
     def _get_tmuxinator_projects(self) -> list:
-        """Gets tmuxinator projects name
-
-        """
+        """Get tmuxinator projects name."""
         out, err = subprocess.Popen(
             "tmuxinator list",
             shell=True,
@@ -141,7 +120,7 @@ class RofiTmux(object):
         return projects
 
     def _get_session_by_name(self, session_name) -> libtmux.session.Session:
-        """Gets libtmux.session.Session
+        """Get libtmux.session.Session.
 
         :session_name: session name
 
@@ -152,8 +131,7 @@ class RofiTmux(object):
                     return s
 
     def _rofi_tmuxinator(self, rofi_msg, rofi_err) -> None:
-        """Launches rofi for loading a tmuxinator project
-        Updates the number of tmux sessions
+        """Launch rofi for loading a tmuxinator project.
 
         :rofi_msg: rofi displayed message
         :err_msg: rofi error message
@@ -168,26 +146,33 @@ class RofiTmux(object):
                     shell=True,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE).communicate()
-                # that's when the user didn't have any prior sessions
-                if not self._cur_tmux_s:
-                    return
+                # update sessions.
                 self._sessions = self._libts.list_sessions()
-                if self._has_i3:
-                    self._switch_i3_tmux_workspace(self._sessions[res].name)
-                self._sessions[res].switch_client()
+                session = self._get_session_by_name(projects[res])
+                workspace = None
+                if self._wm:
+                    workspace = self._wm.is_tmux_not_in_cur_workspace(
+                        self._cur_tmux_s)
+                    if workspace:
+                        self._wm.switch_tmux_workspace(session.name)
+                try:
+                    session.attach_session()
+                except libtmux.exc.LibTmuxException as e:
+                    # there are no attached clients just switch instead.
+                    session.switch_client()
+                self._cache['last_tmux_s'] = self._cur_tmux_s
+                self._write_cache()
         else:
             self._rofi.error(rofi_err)
 
     def load_tmuxinator(self) -> None:
-        """Loads tmuxinator project
-
-        """
+        """Load tmuxinator project."""
         self._rofi_tmuxinator(
             rofi_msg='Tmuxinator project: ',
             rofi_err='There are no projects available')
 
     def _rofi_tmux_session(self, action, rofi_msg) -> None:
-        """Launches rofi for a specific tmux session action
+        """Launch rofi for a specific tmux session action.
 
         :action: 'switch', 'kill'
         :rofi_msg: rofi displayed message
@@ -195,49 +180,51 @@ class RofiTmux(object):
         """
         if self._sessions:
             sessions_list = [s.name for s in self._sessions]
-            sel = 0
-            last_session = self._cache['_last_tmux_s']
-            # if cached then select last session
-            if last_session:
-                sel = sessions_list.index(last_session)
-            else:
-                # select current session as a fallback
-                sel = sessions_list.index(self._cur_tmux_s)
+            tmux_wkps = None
+            if self._wm:
+                tmux_wkps = self._wm.is_tmux_not_in_cur_workspace(
+                    self._cur_tmux_s)
+            try:
+                # select cur session if it's not int the same workspace
+                if tmux_wkps:
+                    sel = sessions_list.index(self._cur_tmux_s)
+                # otherwise selected the last session
+                else:
+                    sel = sessions_list.index(self._cache.get('last_tmux_s'))
+            except ValueError as e:
+                sel = 0
             res, key = self._rofi.select(rofi_msg, sessions_list, select=sel)
             if key == 0:
+                session = self._sessions[res]
                 if action == 'switch':
-                    if self._has_i3:
-                        self._switch_i3_tmux_workspace(
-                            self._sessions[res].name)
+                    # if cur tmux session is not in the current workspace
+                    if tmux_wkps:
+                        self._wm.switch_tmux_workspace(session.name)
                     try:
-                        self._sessions[res].attach_session()
+                        session.attach_session()
                     except libtmux.exc.LibTmuxException as e:
                         # there are no attached clients just switch instead.
-                        self._sessions[res].switch_client()
-                    self._cache['_last_tmux_s'] = self._cur_tmux_s
+                        session.switch_client()
+                    self._cache['last_tmux_s'] = self._cur_tmux_s
                     self._write_cache()
                 elif action == 'kill':
-                    self._sessions[res].kill_session()
+                    session.kill_session()
                 else:
                     self._rofi.error('This action is not implemented')
         else:
-            self._rofi.error(rofi_err)
+            self._rofi.error("There are no sessions yet")
 
     def switch_session(self) -> None:
-        """Switches tmux session
-
-        """
+        """Switch tmux session."""
         self._rofi_tmux_session(action='switch', rofi_msg='Switch session: ')
 
     def kill_session(self) -> None:
-        """Kills tmux session
-
-        """
+        """Kill tmux session."""
         self._rofi_tmux_session(action='kill', rofi_msg='Kill session: ')
 
     def _rofi_tmux_window(self, action, session_name, global_scope,
                           rofi_msg) -> None:
-        """Launches rofi for a specific tmux window action
+        """Launch rofi for a specific tmux window action.
 
         :action: 'switch', 'kill'
         :session_name: if it's not None, the scope is limited to this session
@@ -261,25 +248,32 @@ class RofiTmux(object):
                     windows = session.list_windows()
 
         if windows:
-            # if cached then select last session
-            sel = 0
-            last_window = self._cache['_last_tmux_w']
-            if last_window:
-                sel = sessions_list.index(last_window)
-            # TODO: also find the last workspace, check substr
-            # TODO: select current session as a fallback
-            res, key = self._rofi.select(rofi_msg, [
+            windows_str = [
                 "{}:{}:{}".format(w.session.name, w.index, w.name)
                 for w in windows
-            ])
+            ]
+            tmux_wkps = None
+            cur_win = self._get_cur_window()
+            if self._wm:
+                tmux_wkps = self._wm.is_tmux_not_in_cur_workspace(
+                    self._cur_tmux_s)
+            try:
+                # if it's not in the cur workspace
+                if tmux_wkps:
+                    sel = windows_str.index(cur_win)
+                else:
+                    sel = windows_str.index(self._cache.get('last_tmux_w'))
+            except ValueError as e:
+                sel = 0
+            res, key = self._rofi.select(rofi_msg, windows_str, select=sel)
             if key == 0:
                 win = windows[res]
                 if action == 'switch':
                     self.logger.debug('selected: {}:{}:{}'.format(
                         win.session.name, win.index, win.name))
-                    if self._has_i3:
-                        self._switch_i3_tmux_workspace(
-                            windows[res].session.name)
+                    # only switch if workspace it's not in the same workspace
+                    if tmux_wkps:
+                        self._wm.switch_tmux_workspace(win.session.name)
                     try:
                         self.logger.debug('tmux switching: {}'.format(
                             win.session.name))
@@ -287,16 +281,21 @@ class RofiTmux(object):
                         win.select_window()
                     except libtmux.exc.LibTmuxException as e:
                         # there are no attached clients yet
+                        # attach if running in the shell
                         self.logger.debug('tmux attaching: {}'.format(
                             win.session.name))
                         win.session.attach_session()
+                    self._cache['last_tmux_w'] = cur_win
+                    # also updates last session accordingly
+                    self._cache['last_tmux_s'] = self._cur_tmux_s
+                    self._write_cache()
                 elif action == 'kill':
                     win.kill_window()
                 else:
                     self._rofi.error('This action is not implemented')
 
     def switch_window(self, session_name=None, global_scope=True) -> None:
-        """Switches to a window of a particular session or any session
+        """Switch to a window of a particular session or any session.
 
         :session_name: if it's not None, the scope is limited to this session
         :global_scope: if True, it will take into account all existent windows
@@ -309,7 +308,7 @@ class RofiTmux(object):
             global_scope=global_scope)
 
     def kill_window(self, session_name=None, global_scope=True) -> None:
-        """Kills window of a particular session or any session
+        """Kill window of a particular session or any session.
 
         :session_name: if it's not None, the scope is limited to this session
         :global_scope: if True, it will take into account all existent windows

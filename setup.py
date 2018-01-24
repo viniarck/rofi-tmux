@@ -1,5 +1,5 @@
 from setuptools import setup
-from rofi_tmux.version import __version__
+from rft.version import __version__
 desc = 'Quickly manages tmux sessions, windows and tmuxinator projects on Rofi'
 
 setup(
@@ -10,11 +10,12 @@ setup(
     author_email='viniciusarcanjov8@gmail.com',
     keywords='rofi tmux tmuxinator i3 manage switch',
     url='http://github.com/viniciusarcanjo/rofi-tmux',
-    packages=['rofi_tmux', 'bin'],
+    packages=['rft', 'bin'],
     license='MIT',
     install_requires=['python-rofi', 'libtmux', 'i3ipc', 'click'],
     entry_points='''
         [console_scripts]
+        rft=bin.main:main
         rofi-tmux=bin.main:main
     ''',
     zip_safe=False,
