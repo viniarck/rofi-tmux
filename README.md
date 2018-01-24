@@ -23,7 +23,7 @@ I developed rft (rofi-tmux) to optimize my context-switching workflow. As a user
 
 ### Usage
 
-Check [ReadTheDocs](https://readthedocs.org) for detailed information and suggested keybindings.
+Check [ReadTheDocs](http://rofi-tmux.readthedocs.io/) for detailed information, usage and suggested key bindings.
 
 ### Contributing
 
