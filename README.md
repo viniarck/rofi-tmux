@@ -2,6 +2,8 @@
 
 ![rft](docs/images/rft.png)
 
+[![Documentation Status](https://readthedocs.org/projects/rofi-tmux/badge/?version=latest)](http://rofi-tmux.readthedocs.io/en/latest/?badge=latest)
+
 Quickly switches tmux sessions, windows and tmuxinator projects on rofi. Integrates with [i3wm](http://www.i3wm.org) for a smoother switching workflow, if you have multiple workspaces.
 
 ### Use Case
@@ -16,6 +18,12 @@ I developed rft (rofi-tmux) to optimize my context-switching workflow. As a user
 - Cache last tmux session and window for fast switching back and forth, decreases the number of keystrokes.
 - Integration with i3wm for switching to the right workspace seamlessly.
 - Extensible for other window managers.
+
+### Installation
+
+```
+pip3 install rofi-tmux --user -U
+```
 
 ### Screencast
 
