@@ -11,7 +11,7 @@ import rft.version as version
 @click.option(
     '--debug',
     default=False,
-    type=bool,
+    is_flag=True,
     help='Enables logging at debug level.')
 def main(ctx, debug):
     """RFT (rofi-tmux) switcher."""
