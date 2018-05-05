@@ -8,7 +8,7 @@ import json
 import os
 import rofi
 import subprocess
-logging.basicConfig(filename='/tmp/.rft.log', level=logging.ERROR)
+logging.basicConfig(level=logging.INFO)
 
 
 class RFT(object):
@@ -168,7 +168,7 @@ class RFT(object):
     def load_tmuxinator(self) -> None:
         """Load tmuxinator project."""
         self._rofi_tmuxinator(
-            rofi_msg='Tmuxinator project: ',
+            rofi_msg='Tmuxinator project',
             rofi_err='There are no projects available')
 
     def _rofi_tmux_session(self, action, rofi_msg) -> None:
@@ -216,11 +216,11 @@ class RFT(object):
 
     def switch_session(self) -> None:
         """Switch tmux session."""
-        self._rofi_tmux_session(action='switch', rofi_msg='Switch session: ')
+        self._rofi_tmux_session(action='switch', rofi_msg='Switch session')
 
     def kill_session(self) -> None:
         """Kill tmux session."""
-        self._rofi_tmux_session(action='kill', rofi_msg='Kill session: ')
+        self._rofi_tmux_session(action='kill', rofi_msg='Kill session')
 
     def _rofi_tmux_window(self, action, session_name, global_scope,
                           rofi_msg) -> None:
@@ -303,7 +303,7 @@ class RFT(object):
         """
         self._rofi_tmux_window(
             action='switch',
-            rofi_msg='Switch window: ',
+            rofi_msg='Switch window',
             session_name=session_name,
             global_scope=global_scope)
 
@@ -316,6 +316,6 @@ class RFT(object):
         """
         self._rofi_tmux_window(
             action='kill',
-            rofi_msg='Kill window: ',
+            rofi_msg='Kill window',
             session_name=session_name,
             global_scope=global_scope)
