@@ -1,8 +1,8 @@
+[![Documentation Status](https://readthedocs.org/projects/rofi-tmux/badge/?version=latest)](http://rofi-tmux.readthedocs.io/en/latest/?badge=latest) [![PyPI](https://img.shields.io/pypi/v/rofi-tmux.svg)](https://pypi.python.org/pypi/rofi-tmux)
+
 ## rft (rofi-tmux)
 
 ![rft](docs/images/rft.png)
-
-[![Documentation Status](https://readthedocs.org/projects/rofi-tmux/badge/?version=latest)](http://rofi-tmux.readthedocs.io/en/latest/?badge=latest)
 
 Quickly switches tmux sessions, windows and tmuxinator projects on rofi. Integrates with [i3wm](http://www.i3wm.org) for a smoother switching workflow, if you have multiple workspaces.
 
