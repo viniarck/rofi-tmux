@@ -1,7 +1,4 @@
-python-rofi
-libtmux
-click
-i3ipc
+-e .
 sphinx
 sphinx-autobuild
 sphinx_rtd_theme
