@@ -12,7 +12,7 @@ setup(
     url='http://github.com/viniciusarcanjo/rofi-tmux',
     packages=['rft', 'rft/bin'],
     license='MIT',
-    install_requires=['python-rofi==1.0.1', 'libtmux', 'i3ipc', 'click'],
+    install_requires=['python-rofi==1.0.1', 'libtmux', 'i3ipc>=2.0.1', 'click'],
     entry_points='''
         [console_scripts]
         rft=rft.bin.main:main
