@@ -14,15 +14,16 @@ class WindowManager(ABC):
         super(WindowManager, self).__init__()
 
     @abstractmethod
-    def switch_tmux_workspace(self) -> None:
-        """Switches to the workspace where tmux session_name is running
+    def focus_tmux_window(self, session) -> None:
+
+        """Focuses window where given tmux session is running in
 
         """
         pass
 
     @abstractmethod
-    def is_tmux_not_in_cur_workspace(self, session_name) -> bool:
-        """Verifies if tmux is not in the cur workspace
+    def is_tmux_win_visible(self, session) -> bool:
+        """Verifies if window where given tmux session is running in is visible
 
         """
         pass

@@ -4,7 +4,7 @@ Usage
 Two things you have to keep in mind when using rft:
 
 1. rft doesn't launch a terminal automatically for you, so, if you don't have a tmux session attached yet you're supposed to run rft in the terminal (``rft ss`` or ``rft lp``).
-2. rft caches the last tmux session/window you have switched from, so it automatically pre select it in the rofi prompt, except if you are in a different workspace, where rft assumes that you probably want to switch over to the same session/window you where before.
+2. rft caches the last tmux session/window you have switched from, so it automatically pre-selects it in the rofi prompt, except if you are in a different workspace, where rft assumes that you probably want to switch over to the same session/window you were before/that is currently opened.
 
 
 I recommend that you have shortcuts with control modifiers for rft, so if you always have a tmux session running, it's going to be really fast to find this session and switch to it. For example, I use these key bindings on i3wm for launching rft:
@@ -22,7 +22,8 @@ I recommend that you have shortcuts with control modifiers for rft, so if you al
 
     If you have pip3 installed with the --user flag the executable will be in ~/$HOME/.local/bin/rft.
 
-The first three are the ones that I use the most. They're for loading a tmuxinator project, switch to a session and switch to a window globally. So, I set some keys that are near my home row. If you want to check all rft actions available:
+The first three are the ones that I use the most. They're for loading a tmuxinator project (`lp`), switching to a session (`ss`) and switching to a window globally (`sw`).
+So, I set some keys that are near my home row. If you want to check all rft actions available:
 
 .. code:: shell
 
