@@ -21,7 +21,7 @@ class i3WM(WindowManager):
         self._cur_ws_id = self._get_cur_workspace()
         self._conf = conf
         self.logger = logging.getLogger(__name__)
-        if logger_lvl != None:
+        if logger_lvl:
             self.logger.setLevel(logger_lvl)
 
         super(i3WM, self).__init__()

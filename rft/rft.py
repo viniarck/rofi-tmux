@@ -41,7 +41,7 @@ class RFT(object):
 
         """
         conf = {
-                'wm': None,
+                'wm': 'i3',
                 'tmux_title_rgx': '{session}',
                 'ignored_sessions': []
         }

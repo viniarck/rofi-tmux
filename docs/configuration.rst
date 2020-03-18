@@ -8,7 +8,7 @@ All configuration is optional, and is to be written in a json file at ``~/.rft``
   Defines which window manager we want to integrate with for smoother context-switching.
   With this integration, as soon as you switch context, rofi-tmux will
   automatically focus window where tmux is running.
-  Currently the only supported window manager is ``i3``, which is also the only possible value.
+  Currently the only supported window manager is ``i3``, which is the default value.
   
   .. note::
   
