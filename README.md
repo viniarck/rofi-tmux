@@ -35,7 +35,7 @@ Check [ReadTheDocs](http://rofi-tmux.readthedocs.io/) for detailed information, 
 
 ### Contributing
 
-Contributions are more than welcome. Let me know if you want to add other features or integrations, or if you are having trouble to use rft, open an issue.
+Contributions are more than welcome. Let me know if you want to add other features or integrations, or if you are having trouble to use rft, open an issue. Join the [chat on gitter.im/rofi-tmux/community](https://gitter.im/rofi-tmux/community) if you want to discuss ideas.
 
 ### License
 
