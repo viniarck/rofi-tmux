@@ -96,7 +96,7 @@ class RFT(object):
     def _get_cur_session(self) -> libtmux.session.Session:
         """Return reference to our current tmux session."""
         for s in self._sessions:
-            if str(s.attached) != '0':
+            if str(s.attached_window) != '0':
                 return s
         return None
 
